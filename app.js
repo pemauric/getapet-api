@@ -4,14 +4,17 @@ const app = express();
 const port = 3000
 
 app.use(express.urlencoded({ extended: true }));
-
 app.use(express.json());
+
+
+const PetRoutes = require('./routes/pet.routes')
+const UserRoutes = require('./routes/user.routes')
+
+app.use('/pets', PetsRoutes)
+app.use('/users', UserRoutes)
+
 
 app.listen(port, () => {
     console.log(`listening on port 3000 ${port}`);
     console.log(`http://localhost:${port}`);
 });
-
-
-
-
