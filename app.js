@@ -13,10 +13,10 @@ app.use(cors({
 app.use(express.static('public'))
 
 //const PetRoutes = require('./routes/pet.routes')
-//const UserRoutes = require('./routes/user.routes')
+const UserRoutes = require('./routes/user.routes')
 
 //app.use('/pets', PetRoutes)
-//app.use('/users', UserRoutes)
+app.use('/users', UserRoutes)
 
 
 app.listen(port, () => {
