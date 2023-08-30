@@ -110,9 +110,10 @@ module.exports = class UserController {
 
         } else {
             currentUser = null
+            res.status(422).json({message: 'undefined'})
         }
 
-        res.status(200).send(currentUser)
+        res.status(200).send({user: currentUser})
     }
 
     static async getUserById(req, res) {
@@ -128,5 +129,14 @@ module.exports = class UserController {
         res.status(200).json({ user })
 
     }
+    
+    static async editUser (req, res) {
+        const id = req.params.id
+
+        res.status(200).json({message: 'Success'})
+
+    }
+
+
 
 };
