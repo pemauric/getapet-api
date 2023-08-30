@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
-const createUserToken = require('../helpers/create-user-token');
+const jwt = require('jsonwebtoken');
+const createUserToken = require('../jwt/create-user-token');
+const getToken = require('../jwt/get-token');
 
 
 function validateField(res, fieldName, fieldValue, errorMessage) {
@@ -17,9 +19,9 @@ module.exports = class UserController {
         
         const { name, email, password, phone, confirmpassword } = req.body;
 
-        function validatePasswordMatch(fieldPassword, fieldConfirmPassword, code) {
+        function validatePasswordMatch(fieldPassword, fieldConfirmPassword) {
             if(fieldPassword !== fieldConfirmPassword){
-                res.status(code).json({ message: 'Passwords must match password confirmation' });
+                res.status(422).json({ message: 'Passwords must match password confirmation' });
                 return false;
             }
             return true;
@@ -30,7 +32,7 @@ module.exports = class UserController {
             !validateField(res, 'E-mail', email, 'E-mail is required!') ||
             !validateField(res, 'Password', password, 'Password is required!') ||
             !validateField(res, 'Password Confirmation', confirmpassword, 'Password Confirmation is required!') ||
-            !validatePasswordMatch(res, password, confirmpassword) ||
+            !validatePasswordMatch(password, confirmpassword) ||
             !validateField(res, 'Phone', phone, 'Phone is required!') 
         ) {
             return;
@@ -49,8 +51,9 @@ module.exports = class UserController {
 
         const user = new User ({
             name,
-
-            phone
+            email,
+            phone,
+            password: passwordHash
         })
 
         try {
@@ -95,6 +98,21 @@ module.exports = class UserController {
     }
 
     static async checkUser(req, res) {
-            
+        let currentUser
+
+        if(req.headers.authorization) {
+
+            const token = getToken(req)
+            const decoded = jwt.verify(token, 'TranquilLlama$42JumpS3cure')
+
+            currentUser = await User.findById(decoded.id)
+
+            currentUser.password = undefined
+
+        } else {
+            currentUser = null
+        }
+
+        res.status(200).send(currentUser)
     }
 };

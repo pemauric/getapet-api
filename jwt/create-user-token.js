@@ -6,7 +6,7 @@ const createUserToken = async (user, req, res ) => {
         id : user._id
     }, "TranquilLlama$42JumpS3cure");
 
-    res.status(200).json({
+    res.status(201).json({
         message: 'Token created successfully', 
         token: token, 
         userId: user._id
