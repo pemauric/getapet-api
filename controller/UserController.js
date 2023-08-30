@@ -98,16 +98,15 @@ module.exports = class UserController {
     }
 
     static async checkUser(req, res) {
-        let currentUser
-
+        
+        let currentUser 
+        
         if(req.headers.authorization) {
 
             const token = getToken(req)
             const decoded = jwt.verify(token, 'TranquilLlama$42JumpS3cure')
 
-            currentUser = await User.findById(decoded.id)
-
-            currentUser.password = undefined
+            currentUser = await User.findById(decoded.id).select('-password')
 
         } else {
             currentUser = null
@@ -115,4 +114,19 @@ module.exports = class UserController {
 
         res.status(200).send(currentUser)
     }
+
+    static async getUserById(req, res) {
+        const id = req.params.id
+
+        const user = await User.findById(id).select('-password')
+
+        if (!user) {
+            res.status(422).json({message: 'User not exists'})
+            return
+        }
+
+        res.status(200).json({ user })
+
+    }
+
 };
