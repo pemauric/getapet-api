@@ -151,7 +151,6 @@ module.exports = class UserController {
             validateField(res, 'Email', email, 'Email is required!') ||
             validateField(res, 'Password', password, 'Password is required!') ||
             validateField(res, 'Password Confirmation', confirmpassword, 'Password Confirmation is required!') ||
-            validatePasswordMatch(res, password, confirmpassword) ||
             validateField(res, 'Phone', phone, 'Phone is required!') 
         ) {
             return;
