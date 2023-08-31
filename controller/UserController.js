@@ -3,14 +3,23 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const createUserToken = require('../jwt/create-user-token');
 const getToken = require('../jwt/get-token');
+const getUserByToken = require('../jwt/get-user-by-token');
 
 
 function validateField(res, fieldName, fieldValue, errorMessage) {
     if (!fieldValue) {
         res.status(422).json({ message: errorMessage });
-        return false;
+        return true
     }
-    return true;
+    return false
+}
+
+function validatePasswordMatch(res, fieldPassword, fieldConfirmPassword) {
+    if(fieldPassword !== fieldConfirmPassword){
+        res.status(422).json({ message: 'Passwords must match password confirmation' });
+        return true
+    }
+    return false;
 }
 
 module.exports = class UserController {
@@ -18,22 +27,14 @@ module.exports = class UserController {
     static async register (req, res) {
         
         const { name, email, password, phone, confirmpassword } = req.body;
-
-        function validatePasswordMatch(fieldPassword, fieldConfirmPassword) {
-            if(fieldPassword !== fieldConfirmPassword){
-                res.status(422).json({ message: 'Passwords must match password confirmation' });
-                return false;
-            }
-            return true;
-        }
         
         if (
-            !validateField(res, 'Name', name, 'Name is required!') ||
-            !validateField(res, 'E-mail', email, 'E-mail is required!') ||
-            !validateField(res, 'Password', password, 'Password is required!') ||
-            !validateField(res, 'Password Confirmation', confirmpassword, 'Password Confirmation is required!') ||
-            !validatePasswordMatch(password, confirmpassword) ||
-            !validateField(res, 'Phone', phone, 'Phone is required!') 
+            validateField(res, 'Name', name, 'Name is required!') ||
+            validateField(res, 'E-mail', email, 'E-mail is required!') ||
+            validateField(res, 'Password', password, 'Password is required!') ||
+            validateField(res, 'Password Confirmation', confirmpassword, 'Password Confirmation is required!') ||
+            validatePasswordMatch(res, password, confirmpassword) ||
+            validateField(res, 'Phone', phone, 'Phone is required!') 
         ) {
             return;
         }
@@ -72,7 +73,7 @@ module.exports = class UserController {
         const { email, password } = req.body
 
         if (
-            !validateField(res, 'E-mail', email, 'E-mail is required!') ||
+            !validateField(res, 'E-mail', email, 'E-mail is required!') &&
             !validateField(res, 'Password', password, 'Password is required!')
         ) {
             return;
@@ -133,7 +134,64 @@ module.exports = class UserController {
     static async editUser (req, res) {
         const id = req.params.id
 
-        res.status(200).json({message: 'Success'})
+        const token = getToken(req)
+
+        const user = await getUserByToken(token) 
+
+        const { name, email, password, confirmpassword, phone} = req.body
+
+        let image = ''
+
+        if(req.file) {
+            user.image = req.file.filename
+        }
+
+        if (
+            validateField(res, 'Name', name, 'Name is required!') ||
+            validateField(res, 'Email', email, 'Email is required!') ||
+            validateField(res, 'Password', password, 'Password is required!') ||
+            validateField(res, 'Password Confirmation', confirmpassword, 'Password Confirmation is required!') ||
+            validatePasswordMatch(res, password, confirmpassword) ||
+            validateField(res, 'Phone', phone, 'Phone is required!') 
+        ) {
+            return;
+        }
+
+        const emailExists = await User.exists({ email: email })
+
+        if (emailExists) {
+            res.status(422).json({ message: 'This email already exists' })
+            return
+        }
+        
+        if (password === confirmpassword && password !== null) {
+            const salt = await bcrypt.genSalt(14)
+            const passwordHash = await bcrypt.hash(password,salt)
+            
+            user.password = passwordHash
+        }
+    
+        user.name = name 
+        user.email = email
+        user.phone = phone
+
+        //console.log(user)
+
+        try {
+            await User.findOneAndUpdate(
+                {_id: user._id},
+                {$set: user},
+                {new: true},
+            )
+
+            res.status(200).json({ message: 'User updated successfully' })
+        
+        } catch (error) {   
+            res.status(500).json({ message: '' + error})
+            return
+        }
+
+        //res.status(200).json({user: user})
 
     }
 
