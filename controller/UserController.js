@@ -4,15 +4,7 @@ const jwt = require('jsonwebtoken');
 const createUserToken = require('../jwt/create-user-token');
 const getToken = require('../jwt/get-token');
 const getUserByToken = require('../jwt/get-user-by-token');
-
-
-function validateField(res, fieldName, fieldValue, errorMessage) {
-    if (!fieldValue) {
-        res.status(422).json({ message: errorMessage });
-        return true
-    }
-    return false
-}
+const validateField = require('../utils/validateField');
 
 function validatePasswordMatch(res, fieldPassword, fieldConfirmPassword) {
     if(fieldPassword !== fieldConfirmPassword){
@@ -194,6 +186,6 @@ module.exports = class UserController {
 
     }
 
-
-
 };
+
+//module.exports =  validateField 

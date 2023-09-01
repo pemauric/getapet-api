@@ -6,7 +6,7 @@ const Pet = mongoose.model(
     'Pet',
     new Schema({
         name: {
-            type: Number,
+            type: String,
             required: true
         },
         age : {
