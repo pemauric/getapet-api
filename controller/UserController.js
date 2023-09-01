@@ -65,13 +65,13 @@ module.exports = class UserController {
         const { email, password } = req.body
 
         if (
-            !validateField(res, 'E-mail', email, 'E-mail is required!') &&
-            !validateField(res, 'Password', password, 'Password is required!')
+            validateField(res, 'E-mail', email, 'E-mail is required!') ||
+            validateField(res, 'Password', password, 'Password is required!')
         ) {
             return;
         }
-
-        const user = await User.findOne({email: email})
+    
+            const user = await User.findOne({email: email})
 
         if (!user) {
             res.status(422).json({message: 'User not exist'})
@@ -87,9 +87,10 @@ module.exports = class UserController {
             return
         }
 
-        await createUserToken(user, req, res);
+            await createUserToken(user, req, res);
+        
     }
-
+    
     static async checkUser(req, res) {
         
         let currentUser 
@@ -128,7 +129,7 @@ module.exports = class UserController {
 
         const token = getToken(req)
 
-        const user = await getUserByToken(token) 
+        const user = await getUserByToken(token)  
 
         const { name, email, password, confirmpassword, phone} = req.body
 
@@ -183,7 +184,6 @@ module.exports = class UserController {
         }
 
         //res.status(200).json({user: user})
-
     }
 
 };
