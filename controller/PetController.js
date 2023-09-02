@@ -149,8 +149,6 @@ module.exports = class PetController {
 
         console.log(user)
 
-       // const userExist = await User.findById(user.id)
-
         if(pet.user._id.toString() !== user._id.toString()){
             res.status(404).json({message: 'There was a problem processing your request, please try again later'})
         }
