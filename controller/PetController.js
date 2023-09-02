@@ -3,6 +3,7 @@ const User = require("../models/User");
 const getToken = require('../jwt/get-token');
 const getUserByToken = require('../jwt/get-user-by-token');
 const jwt = require('jsonwebtoken');
+const ObjectId = require('mongoose').Types.ObjectId
 
 
 const validateField = (res, fieldName, fieldValue, errorMessage) => {
@@ -104,9 +105,59 @@ module.exports = class PetController {
         const token = getToken(req)
         const user = await getUserByToken(token)
 
-        const pet = await Pet.find({'adopter: _id': user._id}).sort('-createdAt')
+        console.log(user.name)
+
+        const pet = await Pet.find({'adopter._id': user._id})
 
         res.status(200).json({pet})
+    }
+
+    static async getPetById (req, res) {
+        const {id} = req.params
+
+        if(!ObjectId.isValid(id)) {
+            res.status(422).json({message: 'ID is not a valid'})
+        }
+        
+        const pet = await Pet.findById(id)
+
+        if (!pet) {
+            res.status(404).json({message: 'Pet not exist'})
+        }
+
+        res.status(200).json({ pet })
+    }
+
+    static async deletePetById (req, res) {
+        
+        const { id } = req.params
+
+        if (!ObjectId.isValid(id)) {
+            res.status(422).json({message: 'ID is not a valid'})
+        }
+        const pet = await Pet.findById(id)
+
+        if (!pet) {
+            res.status(404).json({message: 'Pet not exist'})
+        }
+
+        //console.log(pet)
+
+        const token = getToken(req)
+
+        const user = await getUserByToken(token)
+
+        console.log(user)
+
+       // const userExist = await User.findById(user.id)
+
+        if(pet.user._id.toString() !== user._id.toString()){
+            res.status(404).json({message: 'There was a problem processing your request, please try again later'})
+        }
+
+        await Pet.findByIdAndRemove(id)
+
+        res.status(200).json({message: 'Pet removed successfully'})
     }
 
 }
