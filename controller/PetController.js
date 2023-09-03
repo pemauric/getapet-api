@@ -33,20 +33,14 @@ module.exports = class PetController {
             return;
         } 
         
-        /*if (image.length === 0) {
+        if (image.length === 0) {
             res.status(422).json({ message: 'Image is required' });
             return 
-        }*/
+        }
 
         const token = getToken(req);
 
         const user = await getUserByToken(token);
-
-        /*if (user !== null && user !== undefined) {
-            const userName = user.name;
-        } else {
-            console.error('Usuário não encontrado');
-        }*/
 
         //const user = await getUserByToken(token);
         
@@ -117,12 +111,14 @@ module.exports = class PetController {
 
         if(!ObjectId.isValid(id)) {
             res.status(422).json({message: 'ID is not a valid'})
+            return
         }
         
-        const pet = await Pet.findById(id)
+        const pet = await Pet.findOne({_id: id})
 
         if (!pet) {
             res.status(404).json({message: 'Pet not exist'})
+            return
         }
 
         res.status(200).json({ pet })
@@ -134,11 +130,13 @@ module.exports = class PetController {
 
         if (!ObjectId.isValid(id)) {
             res.status(422).json({message: 'ID is not a valid'})
+            return
         }
         const pet = await Pet.findById(id)
 
         if (!pet) {
             res.status(404).json({message: 'Pet not exist'})
+            return
         }
 
         //console.log(pet)
@@ -149,14 +147,84 @@ module.exports = class PetController {
 
         console.log(user)
 
-        if(pet.user._id.toString() !== user._id.toString()){
-            res.status(404).json({message: 'There was a problem processing your request, please try again later'})
+        const petUserId = pet.user.id.toString()
+        const UserId = user._id.toString()
+
+        console.log(petUserId)
+        
+        if(petUserId !== UserId) {
+            res.status(422).json({message: 'There was a problem processing your request, please try again later'})
+            return
         }
 
         await Pet.findByIdAndRemove(id)
 
         res.status(200).json({message: 'Pet removed successfully'})
     }
+
+    static async editPetById(req, res){
+        const id = req.params.id
+        const {name, age, weight, color, description} = req.body
+        const image = req.files
+        const available = true
+
+        const updatePet = {}
+
+        const token = getToken(req)
+
+        const user = await getUserByToken(token)
+
+        const currentPet = await Pet.findOne({_id: id})
+
+        //console.log(currentPet)
+
+        if(!currentPet){
+            res.status(422).json({ message: 'Pet not exists' });
+            return;
+        }
+
+        const userId = user._id.toString()
+        
+        const petUserId = currentPet.user.id.toString()
+
+        if (userId !== petUserId) {
+            res.status(422).json('There was a problem processing your request, please try again later')
+            return
+        }
+
+        if (
+            validateField(res, "Name", name, "Name is required") ||
+            validateField(res, "Age", age, "Age is required") ||
+            validateField(res, "Color", color, "Color is required") ||
+            validateField(res, "Description", description, "Description is required") ||
+            validateField(res, "Weight", weight, "Weight is required") 
+        ) {
+            return;
+        } 
+
+        if (image.length === 0) {
+            res.status(422).json({ message: 'Images is required' });
+            return 
+        }
+
+        updatePet.name = name;
+        updatePet.age = age;
+        updatePet.weight = weight;
+        updatePet.color = color;
+        updatePet.description = description;
+
+        updatePet.image = []
+        
+        image.map((image) => {
+            updatePet.image.push(image.filename)
+        })
+
+        await Pet.findByIdAndUpdate(id, updatePet)
+
+        res.status(200).json({message: 'Pet updated successfully '})
+    }
+
+
 
 }
 
