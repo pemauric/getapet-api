@@ -26,5 +26,9 @@ imageUpload.array('image'),
 PetController.editPetById
 );
 
+router.patch('/schedule/:id', verifyToken, PetController.schedule);
+
+router.patch('/conclude/:id', verifyToken, PetController.statusAdopter);
+
 module.exports = router;
 

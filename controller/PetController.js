@@ -224,8 +224,89 @@ module.exports = class PetController {
         res.status(200).json({message: 'Pet updated successfully '})
     }
 
+    static async schedule (req, res) {
+        const { id } = req.params
 
+        if (!ObjectId.isValid(id)) {
+            res.status(422).json({message: 'ID is not a valid'})
+            return
+        }
 
+        const pet = await Pet.findById(id)
+
+        if(!pet) {
+            res.status(404).json({message: 'Pet not exist'})
+            return
+        }
+        
+        const token = getToken(req)
+
+        const user = await getUserByToken(token)
+
+        const PetUserId = pet.user.id
+        //const UserId = user.id.toString()
+
+        if (PetUserId.equals(user.id)) {
+            res.status(422).json({message:"There was a problem processing your request, please try again later"})
+        }        
+
+        if(pet.adopter){
+            if (pet.adopter._id.equals(user._id)) {
+                res.status(422).json({message:"There was a problem processing your request, please try again later"})
+                return
+            }
+        }
+        
+        pet.adopter = {
+            _id: user._id,
+            name: user.name,
+            phone: user.phone,
+            image: user.image
+        }
+
+        await Pet.findByIdAndUpdate(id, pet)
+        
+        res.status(200).json({message:"Adopter was updated successfully"});
+
+    }
+
+    static async statusAdopter (req, res){
+        const id = req.params.id 
+        
+        if (!ObjectId.isValid(id)) {
+            res.status(422).json({message: 'ID is not a valid'})
+            return
+        }
+
+        const pet = await Pet.findById(id)
+
+        if(!pet) {
+            res.status(404).json({message: 'Pet not exist'})
+            return
+        }
+        
+        const token = getToken(req)
+        const user = await getUserByToken(token)
+
+        const petUserId = pet.user.id.toString()
+        const UserId = user._id.toString()
+
+        if(petUserId !== UserId) {
+            res.status(422).json({message: 'There was a problem processing your request, please try again later'})
+            return
+        }
+
+        pet.available = false;
+
+        await Pet.findByIdAndUpdate(id, pet)
+
+        res.status(200).json({
+            pet: pet,
+            message: `Parabéns! O ciclo de adoção foi finalizado com sucesso!`,
+        })
+    }
+
+    
 }
 
 

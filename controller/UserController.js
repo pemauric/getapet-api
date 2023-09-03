@@ -129,7 +129,14 @@ module.exports = class UserController {
 
         const token = getToken(req)
 
-        const user = await getUserByToken(token)  
+        const user = await getUserByToken(token)
+
+        const UserIdByToken = user.id.toString()
+
+        if(UserIdByToken !== id) {
+            res.status(422).json({message: 'There was a problem processing your request, please try again later'});
+            return
+        }
 
         const { name, email, password, confirmpassword, phone} = req.body
 
@@ -148,6 +155,7 @@ module.exports = class UserController {
         ) {
             return;
         }
+
 
         const emailExists = await User.exists({ email: email })
 
