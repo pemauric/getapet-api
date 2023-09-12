@@ -93,21 +93,21 @@ module.exports = class UserController {
     
     static async checkUser(req, res) {
         
-        let currentUser 
+        let user 
         
         if(req.headers.authorization) {
 
             const token = getToken(req)
             const decoded = jwt.verify(token, 'TranquilLlama$42JumpS3cure')
 
-            currentUser = await User.findById(decoded.id).select('-password')
+            user = await User.findById(decoded.id).select('-password')
 
         } else {
-            currentUser = null
+            user = null
             res.status(422).json({message: 'undefined'})
         }
 
-        res.status(200).send({user: currentUser})
+        res.status(200).send(user)
     }
 
     static async getUserById(req, res) {

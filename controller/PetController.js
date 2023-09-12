@@ -27,7 +27,6 @@ module.exports = class PetController {
             validateField(res, "Name", name, "Name is required") ||
             validateField(res, "Age", age, "Age is required") ||
             validateField(res, "Color", color, "Color is required") ||
-            validateField(res, "Description", description, "Description is required") ||
             validateField(res, "Weight", weight, "Weight is required") 
         ) {
             return;
