@@ -27,6 +27,7 @@ module.exports = class PetController {
             validateField(res, "Name", name, "Name is required") ||
             validateField(res, "Age", age, "Age is required") ||
             validateField(res, "Color", color, "Color is required") ||
+            //validateField(res, "Description", description, "Description is required")||
             validateField(res, "Weight", weight, "Weight is required") 
         ) {
             return;
@@ -98,11 +99,9 @@ module.exports = class PetController {
         const token = getToken(req)
         const user = await getUserByToken(token)
 
-        console.log(user.name)
-
         const pet = await Pet.find({'adopter._id': user._id})
 
-        res.status(200).json({pet})
+        res.status(200).json(pet)
     }
 
     static async getPetById (req, res) {
@@ -195,16 +194,21 @@ module.exports = class PetController {
             validateField(res, "Name", name, "Name is required") ||
             validateField(res, "Age", age, "Age is required") ||
             validateField(res, "Color", color, "Color is required") ||
-            validateField(res, "Description", description, "Description is required") ||
+            //validateField(res, "Description", description, "Description is required") ||
             validateField(res, "Weight", weight, "Weight is required") 
         ) {
             return;
         } 
 
-        if (image.length === 0) {
-            res.status(422).json({ message: 'Images is required' });
-            return 
+        
+        if (image.lenght > 0) {
+            updatePet.image = []
+            image.map((image) => {
+                updatePet.image.push(image.filename)
+            })
         }
+
+        console.log(updatePet)
 
         updatePet.name = name;
         updatePet.age = age;
@@ -212,11 +216,7 @@ module.exports = class PetController {
         updatePet.color = color;
         updatePet.description = description;
 
-        updatePet.image = []
         
-        image.map((image) => {
-            updatePet.image.push(image.filename)
-        })
 
         await Pet.findByIdAndUpdate(id, updatePet)
 
